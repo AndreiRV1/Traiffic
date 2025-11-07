@@ -4,25 +4,30 @@ class Graph:
     def __init__(self):
         self.adj_list = {}
         
-    def add_node(self,node):
+    def add_node(self, node):
         if node not in self.adj_list:
             self.adj_list[node] = set()
     
-    def add_edge(self, node_start, node_end, cost):
+    def add_edge(self, node_start, node_end, cost : float):
         if node_start not in self.adj_list:
             self.add_node(node_start)
         if node_end not in self.adj_list:
             self.add_node(node_end)
         self.adj_list[node_start].add((node_end,cost))
-
-    def add_double_edge(self, node_start, node_end, cost):
+    
+    def add_double_edge(self, node_start, node_end, cost : float):
         self.add_edge(node_start, node_end, cost)
         self.add_edge(node_end, node_start, cost)
 
-    def add_multiple_edges(self, edge_list):
-        for edge in edge_list:
-            self.add_edge(edge[0], edge[1], edge[2])
-    def add_multiple_edges_double(self,edge_list):
+    def add_multiple_edges(self, edge_list : list):
+        try:
+            for edge in edge_list:
+                self.add_edge(edge[0], edge[1], edge[2])
+        except:
+            self.add_edge(edge_list[0], edge_list[1], edge_list[2])
+            
+            
+    def add_multiple_edges_double(self, edge_list : list):
         for edge in edge_list:
             self.add_double_edge(edge[0], edge[1], edge[2])
     
@@ -43,7 +48,7 @@ class Graph:
     def traverse(self, start, end):
         distances = {node: (float("inf"), None) for node in self.adj_list }
         distances[start] = (0, None)
-
+        found = 0
         heap = [(0,start,None)]
         heapify(heap)
 
