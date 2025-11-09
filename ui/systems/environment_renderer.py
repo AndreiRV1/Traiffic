@@ -2,7 +2,6 @@ import math
 import random
 import pygame
 
-
 environmentGrassImages = [
     "./assets/environment/grass_0.png",
     "./assets/environment/grass_1.png",
@@ -51,8 +50,8 @@ class EnvironmentRenderer:
         self.mapHeight = mapHeight
         self.gridRows = gridRows
         self.gridColumns = gridColumns
+        self.backgroundGrass = None
         self.backgroundDecorations = None
-        self.gata = 0
         self.loadEnvironmentImages()
 
     def loadEnvironmentImages(self):
@@ -159,20 +158,19 @@ class EnvironmentRenderer:
             )
 
     def draw(self):
-        scaledBackgroundGrass = pygame.transform.scale(
-            self.backgroundGrass,
-            (self.mapWidth * self.camera.zoom, self.mapHeight * self.camera.zoom),
-        )
-
         screenX = -self.camera.x * self.camera.zoom
         screenY = -self.camera.y * self.camera.zoom
 
-        self.screen.blit(scaledBackgroundGrass, (screenX, screenY))
+        if self.backgroundGrass is not None:
+            scaledBackgroundGrass = pygame.transform.scale(
+                self.backgroundGrass,
+                (self.mapWidth * self.camera.zoom, self.mapHeight * self.camera.zoom),
+            )
+            self.screen.blit(scaledBackgroundGrass, (screenX, screenY))
 
         if self.backgroundDecorations is not None:
             scaledBackgroundDecorations = pygame.transform.scale(
                 self.backgroundDecorations,
                 (self.mapWidth * self.camera.zoom, self.mapHeight * self.camera.zoom),
             )
-
             self.screen.blit(scaledBackgroundDecorations, (screenX, screenY))

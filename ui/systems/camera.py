@@ -1,8 +1,8 @@
+import pygame
 from core.settings import *
 
 
 class Camera:
-
     def __init__(self, x, y, zoom):
         self.x = x
         self.y = y
@@ -27,3 +27,20 @@ class Camera:
         self.zoom = max(minZoom, min(zoom, maxZoom))
         self.setX(self.x)
         self.setY(self.y)
+
+    def update(self, dt):
+        panSpeed = dt * 600 / self.zoom
+        zoom_step = 0.05
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_LEFT]:
+            self.setX(self.x - panSpeed)
+        if keys[pygame.K_RIGHT]:
+            self.setX(self.x + panSpeed)
+        if keys[pygame.K_UP]:
+            self.setY(self.y - panSpeed)
+        if keys[pygame.K_DOWN]:
+            self.setY(self.y + panSpeed)
+        if keys[pygame.K_i]:
+            self.setZoom(self.zoom + zoom_step)
+        if keys[pygame.K_o]:
+            self.setZoom(self.zoom - zoom_step)

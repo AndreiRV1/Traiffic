@@ -1,13 +1,13 @@
 import pygame
 
-from ui.environment_renderer import EnvironmentRenderer
 
 roadsImages = {
+    # 1 way
     "r": "./assets/roads/road_s_r.png",
     "l": "./assets/roads/road_s_l.png",
     "u": "./assets/roads/road_s_u.png",
     "d": "./assets/roads/road_s_d.png",
-    # 2way
+    # 2 way
     "lr": "./assets/roads/road_s_rl.png",
     "ru": "./assets/roads/road_s_ru.png",
     "dr": "./assets/roads/road_s_rd.png",
@@ -23,15 +23,8 @@ roadsImages = {
     "dlru": "./assets/roads/road_s_rlud.png",
 }
 
-carsImages = [
-    "./assets/cars/green_car.png",
-    "./assets/cars/blue_car.png",
-    "./assets/cars/red_car.png",
-    "./assets/cars/orange_car.png",
-]
 
-
-class Renderer:
+class RoadsRenderer:
     def __init__(self, camera, screen, mapWidth, mapHeight, gridRows, gridColumns):
         self.camera = camera
         self.screen = screen
@@ -39,60 +32,55 @@ class Renderer:
         self.mapHeight = mapHeight
         self.gridRows = gridRows
         self.gridColumns = gridColumns
-        self.environmentRenderer = EnvironmentRenderer(
-            camera, screen, mapWidth, mapHeight, gridRows, gridColumns
-        )
+        self.carsSurface = None
         self.loadRoadImages()
-        self.loadCarImages()
-        self.environmentRenderer.createBackgroundGrass()
-        self.roadsDrawn = 0
 
     def loadRoadImages(self):
         for key in roadsImages:
             roadsImages[key] = pygame.image.load(roadsImages[key])
 
-    def loadCarImages(self):
-        for index in range(0, len(carsImages)):
-            carsImages[index] = pygame.image.load(carsImages[index])
+    def createCarsSurface(self, roadNodes, roadConnections):
+        grid = self.parseRoads(roadNodes, roadConnections)
 
-    def draw_world(self, state):
-        self.screen.fill((75, 175, 63))
-        self.environmentRenderer.draw()
-        self.drawRoads(
-            self.camera,
-            self.gridRows,
-            self.gridColumns,
-            state.roadNodes,
-            state.roadConnections,
+        self.carsSurface = pygame.Surface(
+            (self.mapWidth, self.mapHeight), pygame.SRCALPHA
         )
-        self.drawCars(self.camera, self.gridRows, self.gridColumns, state.cars)
 
-    def drawRoads(self, camera, gridRows, gridColumns, roadNodes, roadConnections):
-        grid = self.parseRoads(gridRows, gridColumns, roadNodes, roadConnections)
-
-        if self.roadsDrawn == 0:
-            self.environmentRenderer.createBackgroundDecorations(grid)
-            self.roadsDrawn = 1
-
-        cellWidth = self.mapWidth / gridColumns
-        cellHeight = self.mapHeight / gridRows
+        cellWidth = self.mapWidth / self.gridColumns
+        cellHeight = self.mapHeight / self.gridRows
 
         for y in range(0, len(grid)):
             for x in range(0, len(grid[y])):
                 worldX = cellWidth * x
                 worldY = cellHeight * y
-                screenX = (worldX - camera.x) * camera.zoom
-                screenY = (worldY - camera.y) * camera.zoom
+                screenX = (worldX - self.camera.x) * self.camera.zoom
+                screenY = (worldY - self.camera.y) * self.camera.zoom
                 img = roadsImages.get(grid[y][x], None)
                 if img is not None:
                     scaled_img = pygame.transform.scale(
                         img,
-                        (cellWidth * camera.zoom + 1, cellHeight * camera.zoom + 1),
+                        (
+                            cellWidth * self.camera.zoom + 1,
+                            cellHeight * self.camera.zoom + 1,
+                        ),
                     )
-                    self.screen.blit(scaled_img, (screenX, screenY))
+                    self.carsSurface.blit(scaled_img, (screenX, screenY))
 
-    def parseRoads(self, gridRows, gridColumns, roadNodes, roadConnections):
-        grid = [["" for _ in range(gridColumns)] for _ in range(gridRows)]
+        return grid
+
+    def draw(self):
+        screenX = -self.camera.x * self.camera.zoom
+        screenY = -self.camera.y * self.camera.zoom
+
+        if self.carsSurface is not None:
+            scaledCarsSurface = pygame.transform.scale(
+                self.carsSurface,
+                (self.mapWidth * self.camera.zoom, self.mapHeight * self.camera.zoom),
+            )
+            self.screen.blit(scaledCarsSurface, (screenX, screenY))
+
+    def parseRoads(self, roadNodes, roadConnections):
+        grid = [["" for _ in range(self.gridColumns)] for _ in range(self.gridRows)]
         for i in range(0, len(roadConnections)):
             nodeX = roadNodes[i].x
             nodeY = roadNodes[i].y
@@ -122,20 +110,3 @@ class Renderer:
                 if grid[i][j]:
                     grid[i][j] = "".join(sorted(grid[i][j]))
         return grid
-
-    def drawCars(self, camera, gridRows, gridColumns, cars):
-        cellWidth = self.mapWidth / gridColumns
-        cellHeight = self.mapHeight / gridRows
-
-        for car in cars:
-            worldX = car.x * cellWidth
-            worldY = car.y * cellHeight
-            screenX = (worldX - camera.x) * camera.zoom
-            screenY = (worldY - camera.y) * camera.zoom
-            img = carsImages[car.id % len(carsImages)]
-            if img is not None:
-                scaled_img = pygame.transform.scale(
-                    img, (cellWidth * camera.zoom, cellHeight * camera.zoom)
-                )
-                rotated_img = pygame.transform.rotate(scaled_img, car.get_direction())
-                self.screen.blit(rotated_img, (screenX, screenY))

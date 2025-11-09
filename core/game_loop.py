@@ -1,8 +1,8 @@
 import pygame
 from backend.simulation import Simulation
 from core.settings import *
-from ui.camera import Camera
-from ui.renderer import Renderer
+from ui.systems.camera import Camera
+from ui.systems.renderer import Renderer
 
 
 class GameLoop:
@@ -30,30 +30,12 @@ class GameLoop:
                 if event.type == pygame.QUIT:
                     running = False
 
-            # update camera
-            # press i or o for zoom in or zoom out
-            # press the arrow keys to move the camera
-            panSpeed = dt * 600 / self.camera.zoom
-            zoom_step = 0.05
-            keys = pygame.key.get_pressed()
-            if keys[pygame.K_LEFT]:
-                self.camera.setX(self.camera.x - panSpeed)
-            if keys[pygame.K_RIGHT]:
-                self.camera.setX(self.camera.x + panSpeed)
-            if keys[pygame.K_UP]:
-                self.camera.setY(self.camera.y - panSpeed)
-            if keys[pygame.K_DOWN]:
-                self.camera.setY(self.camera.y + panSpeed)
-            if keys[pygame.K_i]:
-                self.camera.setZoom(self.camera.zoom + zoom_step)
-            if keys[pygame.K_o]:
-                self.camera.setZoom(self.camera.zoom - zoom_step)
-
             # update simulation
             self.simulation.update(dt)
 
             # draw screen
+            self.camera.update(dt)
             state = self.simulation.export_ui_state()
-            self.renderer.draw_world(state)
+            self.renderer.draw(state)
 
             pygame.display.flip()
