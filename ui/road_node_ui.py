@@ -1,5 +1,4 @@
 class RoadNodeUI:
-    def __init__(self, node_id, x, y):
-        self.id = node_id
+    def __init__(self, x, y):
         self.x = x
         self.y = y

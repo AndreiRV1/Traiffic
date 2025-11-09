@@ -1,6 +1,6 @@
-# core/game_loop.py
 import pygame
 from backend.simulation import Simulation
+from core.settings import *
 from ui.renderer import Renderer
 
 
@@ -9,7 +9,9 @@ class GameLoop:
         self.screen = screen
         self.clock = clock
         self.simulation = Simulation()
-        self.renderer = Renderer(screen)
+        self.renderer = Renderer(
+            screen, SCREEN_WIDTH, SCREEN_HEIGHT, GRID_ROWS, GRID_COLUMNS
+        )
 
     def run(self):
         running = True
@@ -20,10 +22,10 @@ class GameLoop:
                 if event.type == pygame.QUIT:
                     running = False
 
-            # Update backend simulation
+            # update simulation
             self.simulation.update(dt)
 
-            # Draw UI from simulation state
+            # draw screen
             state = self.simulation.export_ui_state()
             self.renderer.draw_world(state)
 
