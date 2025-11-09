@@ -33,7 +33,7 @@ class GameLoop:
             # update camera
             # press i or o for zoom in or zoom out
             # press the arrow keys to move the camera
-            panSpeed = dt * 300 / self.camera.zoom
+            panSpeed = dt * 600 / self.camera.zoom
             zoom_step = 0.05
             keys = pygame.key.get_pressed()
             if keys[pygame.K_LEFT]:

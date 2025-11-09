@@ -1,3 +1,6 @@
+from core.settings import *
+
+
 class Camera:
 
     def __init__(self, x, y, zoom):
@@ -7,30 +10,20 @@ class Camera:
 
     def setX(self, x):
         minX = 0
-        maxX = 250
-
-        if x > maxX:
-            x = maxX
-        if x < minX:
-            x = minX
-        self.x = x
+        maxX = max(0, MAP_WIDTH - SCREEN_WIDTH / self.zoom)
+        self.x = max(minX, min(x, maxX))
 
     def setY(self, y):
         minY = 0
-        maxY = 250
-
-        if y > maxY:
-            y = maxY
-        if y < minY:
-            y = minY
-        self.y = y
+        maxY = max(0, MAP_HEIGHT - SCREEN_HEIGHT / self.zoom)
+        self.y = max(minY, min(y, maxY))
 
     def setZoom(self, zoom):
-        maxZoom = 4
-        minZoom = 0.25
+        minZoomX = SCREEN_WIDTH / MAP_WIDTH
+        minZoomY = SCREEN_HEIGHT / MAP_HEIGHT
+        minZoom = max(minZoomX, minZoomY)
+        maxZoom = 2
 
-        if zoom > maxZoom:
-            zoom = maxZoom
-        if zoom < minZoom:
-            zoom = minZoom
-        self.zoom = zoom
+        self.zoom = max(minZoom, min(zoom, maxZoom))
+        self.setX(self.x)
+        self.setY(self.y)
