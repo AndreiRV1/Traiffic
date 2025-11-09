@@ -1,31 +1,33 @@
 import pygame
 
+from ui.environment_renderer import EnvironmentRenderer
+
 roadsImages = {
-    "r": "./assets/road_s_r.png",
-    "l": "./assets/road_s_l.png",
-    "u": "./assets/road_s_u.png",
-    "d": "./assets/road_s_d.png",
+    "r": "./assets/roads/road_s_r.png",
+    "l": "./assets/roads/road_s_l.png",
+    "u": "./assets/roads/road_s_u.png",
+    "d": "./assets/roads/road_s_d.png",
     # 2way
-    "lr": "./assets/road_s_rl.png",
-    "ru": "./assets/road_s_ru.png",
-    "dr": "./assets/road_s_rd.png",
-    "du": "./assets/road_s_ud.png",
-    "lu": "./assets/road_s_lu.png",
-    "dl": "./assets/road_s_ld.png",
+    "lr": "./assets/roads/road_s_rl.png",
+    "ru": "./assets/roads/road_s_ru.png",
+    "dr": "./assets/roads/road_s_rd.png",
+    "du": "./assets/roads/road_s_ud.png",
+    "lu": "./assets/roads/road_s_lu.png",
+    "dl": "./assets/roads/road_s_ld.png",
     # 3 way
-    "dlr": "./assets/road_s_rld.png",
-    "dlu": "./assets/road_s_lud.png",
-    "lru": "./assets/road_s_rlu.png",
-    "dru": "./assets/road_s_rud.png",
+    "dlr": "./assets/roads/road_s_rld.png",
+    "dlu": "./assets/roads/road_s_lud.png",
+    "lru": "./assets/roads/road_s_rlu.png",
+    "dru": "./assets/roads/road_s_rud.png",
     # 4 way
-    "dlru": "./assets/road_s_rlud.png",
+    "dlru": "./assets/roads/road_s_rlud.png",
 }
 
 carsImages = [
-    "./assets/green_car.png",
-    "./assets/blue_car.png",
-    "./assets/red_car.png",
-    "./assets/orange_car.png",
+    "./assets/cars/green_car.png",
+    "./assets/cars/blue_car.png",
+    "./assets/cars/red_car.png",
+    "./assets/cars/orange_car.png",
 ]
 
 
@@ -37,8 +39,13 @@ class Renderer:
         self.mapHeight = mapHeight
         self.gridRows = gridRows
         self.gridColumns = gridColumns
+        self.environmentRenderer = EnvironmentRenderer(
+            camera, screen, mapWidth, mapHeight, gridRows, gridColumns
+        )
         self.loadRoadImages()
         self.loadCarImages()
+        self.environmentRenderer.createBackgroundGrass()
+        self.roadsDrawn = 0
 
     def loadRoadImages(self):
         for key in roadsImages:
@@ -50,6 +57,7 @@ class Renderer:
 
     def draw_world(self, state):
         self.screen.fill((75, 175, 63))
+        self.environmentRenderer.draw()
         self.drawRoads(
             self.camera,
             self.gridRows,
@@ -62,16 +70,20 @@ class Renderer:
     def drawRoads(self, camera, gridRows, gridColumns, roadNodes, roadConnections):
         grid = self.parseRoads(gridRows, gridColumns, roadNodes, roadConnections)
 
+        if self.roadsDrawn == 0:
+            self.environmentRenderer.createBackgroundDecorations(grid)
+            self.roadsDrawn = 1
+
         cellWidth = self.mapWidth / gridColumns
         cellHeight = self.mapHeight / gridRows
 
-        for i in range(0, len(grid)):
-            for j in range(0, len(grid[i])):
-                worldX = cellWidth * j
-                worldY = cellHeight * i
+        for y in range(0, len(grid)):
+            for x in range(0, len(grid[y])):
+                worldX = cellWidth * x
+                worldY = cellHeight * y
                 screenX = (worldX - camera.x) * camera.zoom
                 screenY = (worldY - camera.y) * camera.zoom
-                img = roadsImages.get(grid[i][j], None)
+                img = roadsImages.get(grid[y][x], None)
                 if img is not None:
                     scaled_img = pygame.transform.scale(
                         img,

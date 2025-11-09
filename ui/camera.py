@@ -6,7 +6,7 @@ class Camera:
         self.zoom = zoom
 
     def setX(self, x):
-        minX = -50
+        minX = 0
         maxX = 250
 
         if x > maxX:
@@ -16,7 +16,7 @@ class Camera:
         self.x = x
 
     def setY(self, y):
-        minY = -50
+        minY = 0
         maxY = 250
 
         if y > maxY:

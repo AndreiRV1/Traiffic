@@ -14,8 +14,8 @@ class GameLoop:
         self.renderer = Renderer(
             self.camera,
             screen,
-            SCREEN_WIDTH,
-            SCREEN_HEIGHT,
+            MAP_WIDTH,
+            MAP_HEIGHT,
             GRID_ROWS,
             GRID_COLUMNS,
         )
