@@ -23,6 +23,7 @@ class GameLoop:
     def run(self):
         running = True
         while running:
+            # delta time between frames - used for movements
             dt = self.clock.tick(60) / 1000.0
 
             # exiting
@@ -33,8 +34,10 @@ class GameLoop:
             # update simulation
             self.simulation.update(dt)
 
-            # draw screen
+            # update camera based on input
             self.camera.update(dt)
+
+            # update rendering based on simulation state
             state = self.simulation.export_ui_state()
             self.renderer.draw(state)
 

@@ -5,6 +5,7 @@ from ui.systems.environment_renderer import EnvironmentRenderer
 from ui.systems.roads_renderer import RoadsRenderer
 
 
+# Contains and controlls all the renderers
 class Renderer:
     def __init__(self, camera, screen, mapWidth, mapHeight, gridRows, gridColumns):
         self.screen = screen
@@ -17,17 +18,29 @@ class Renderer:
         self.roadsRenderer = RoadsRenderer(
             camera, screen, mapWidth, mapHeight, gridRows, gridColumns
         )
+        # dirty means that the roads' cached surface or the environment's cached surface must change
+        # this happens at the start, or when the user modifies the road structure
+        # note that the background grass will never change and the cars do not use cached
+        # surfaces because they change every frame, therefore isDirty does not apply to them
         self.dirty = True
         self.environmentRenderer.createBackgroundGrass()
 
     def draw(self, state):
+        # fills the screen with something
         self.screen.fill((0, 0, 0))
         if self.dirty:
             self.dirty = False
-            grid = self.roadsRenderer.createCarsSurface(
+            # if dirty, create the cached surfaces
+            grid = self.roadsRenderer.createRoadsSurface(
                 state.roadNodes, state.roadConnections
             )
             self.environmentRenderer.createBackgroundDecorations(grid)
+
+        # draw in this order:
+        # 1. the grass - environmentRenderer
+        # 2. the fences and the other decorations - environmentRenderer
+        # 3. the roads - roadsRenderer
+        # 4. the cars - carsRenderer
 
         self.environmentRenderer.draw()
         self.roadsRenderer.draw()
