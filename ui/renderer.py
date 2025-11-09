@@ -1,6 +1,6 @@
 import pygame
 
-roads = {
+roadsImages = {
     "r": "./assets/road_s_r.png",
     "l": "./assets/road_s_l.png",
     "u": "./assets/road_s_u.png",
@@ -21,6 +21,13 @@ roads = {
     "dlru": "./assets/road_s_rlud.png",
 }
 
+carsImages = [
+    "./assets/green_car.png",
+    "./assets/blue_car.png",
+    "./assets/red_car.png",
+    "./assets/orange_car.png",
+]
+
 
 class Renderer:
     def __init__(self, screen, mapWidth, mapHeight, gridRows, gridColumns):
@@ -30,16 +37,22 @@ class Renderer:
         self.gridRows = gridRows
         self.gridColumns = gridColumns
         self.loadRoadImages()
+        self.loadCarImages()
 
     def loadRoadImages(self):
-        for key in roads:
-            roads[key] = pygame.image.load(roads[key])
+        for key in roadsImages:
+            roadsImages[key] = pygame.image.load(roadsImages[key])
+
+    def loadCarImages(self):
+        for index in range(0, len(carsImages)):
+            carsImages[index] = pygame.image.load(carsImages[index])
 
     def draw_world(self, state):
-        self.screen.fill((100, 255, 0))
+        self.screen.fill((75, 175, 63))
         self.drawRoads(
             self.gridRows, self.gridColumns, state.roadNodes, state.roadConnections
         )
+        self.drawCars(self.gridRows, self.gridColumns, state.cars)
 
     def drawRoads(self, gridRows, gridColumns, roadNodes, roadConnections):
         grid = self.parseRoads(gridRows, gridColumns, roadNodes, roadConnections)
@@ -51,7 +64,7 @@ class Renderer:
             for j in range(0, len(grid[i])):
                 x = cellWidth * j
                 y = cellHeight * i
-                img = roads.get(grid[i][j], None)
+                img = roadsImages.get(grid[i][j], None)
                 if img is not None:
                     scaled_img = pygame.transform.scale(img, (cellWidth, cellHeight))
                     self.screen.blit(scaled_img, (x, y))
@@ -87,3 +100,16 @@ class Renderer:
                 if grid[i][j]:
                     grid[i][j] = "".join(sorted(grid[i][j]))
         return grid
+
+    def drawCars(self, gridRows, gridColumns, cars):
+        cellWidth = self.mapWidth / gridColumns
+        cellHeight = self.mapHeight / gridRows
+
+        for car in cars:
+            x = car.x * cellWidth
+            y = car.y * cellHeight
+            img = carsImages[car.id % len(carsImages)]
+            if img is not None:
+                scaled_img = pygame.transform.scale(img, (cellWidth, cellHeight))
+                rotated_img = pygame.transform.rotate(scaled_img, car.get_direction())
+                self.screen.blit(rotated_img, (x, y))

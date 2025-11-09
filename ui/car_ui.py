@@ -9,8 +9,5 @@ class CarUI:
         self.vx = vx
         self.vy = vy
 
-    def position(self):
-        return (self.x, self.y)
-
-    def facing_angle(self):
-        return math.degrees(math.atan2(-self.vy, self.vx))
+    def get_direction(self):
+        return math.degrees(math.atan2(-self.vy, self.vx)) - 90
