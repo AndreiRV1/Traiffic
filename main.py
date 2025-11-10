@@ -4,6 +4,7 @@ from core import settings
 
 
 def main():
+    # init pygame
     pygame.init()
     pygame.display.set_caption(settings.WINDOW_TITLE)
 
@@ -15,6 +16,7 @@ def main():
     game = GameLoop(screen, clock)
     game.run()
 
+    # safely exit the game when done
     pygame.quit()
 
 
