@@ -74,5 +74,5 @@ class Graph:
             while distances[crt_node][1] != None:
                 crt_node = distances[crt_node][1]
                 path.append(crt_node)
-        path = list(reversed(path))
+        path = [int(x) for x in list(reversed(path))]
         return path

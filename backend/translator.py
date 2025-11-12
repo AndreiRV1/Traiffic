@@ -4,7 +4,7 @@ from ui.data.car_ui import CarUI
 import numpy as np
 
 
-class Translator:
+class Translator_follow:
     def __init__(self, coord_map : dict):
         self.coord_map = coord_map
     def translate(self, cars):
@@ -19,3 +19,12 @@ class Translator:
             carUI = CarUI(car.id, position[0], position[1], speed[0], speed[1])
             carsUI.append(carUI)
         return carsUI
+    
+class Translator:
+    def translate(self, cars):
+        carsUI = list()
+        for car in cars:
+            carUI = CarUI(car.id,car.position[0],car.position[1],car.facing[0],car.facing[1])
+            carsUI.append(carUI)
+        return carsUI
+
