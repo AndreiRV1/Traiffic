@@ -18,18 +18,34 @@ coreRoadsImages = {
     "tb-r-trbr": "./assets/roads/tb-r-trbr.png",
     "tb-r-br": "./assets/roads/tb-r-br.png",
     "tb-r-": "./assets/roads/tb-r-.png",
+    "tb-rl-trbrbltl": "./assets/roads/tb-rl-trbrbltl.png",
+    "tb-rl-brbltl": "./assets/roads/tb-rl-brbltl.png",
+    "tb-rl-brbl": "./assets/roads/tb-rl-brbl.png",
+    "tb-rl-trbl": "./assets/roads/tb-rl-trbl.png",
     "tr--": "./assets/roads/tr--.png",
     "tr--tr": "./assets/roads/tr--tr.png",
-    "tr-l-": "./assets/roads/tr-l-.png",
+    "tr-l-tl": "./assets/roads/tr-l-.png",
+    "tr-l-trtl": "./assets/roads/tr-l-tr.png",
+    "tr-l-": "./assets/roads/tr-l-tr.png",
     "tr-l-tr": "./assets/roads/tr-l-tr.png",
-    "tr-bl-": "./assets/roads/tr-bl-.png",
-    "tr-bl-tr": "./assets/roads/tr-bl-tr.png",
+    "tr-bl-brbltl": "./assets/roads/tr-bl-brbltl.png",
+    "tr-bl-trbrbltl": "./assets/roads/tr-bl-trbrbltl.png",
+    "tr-bl-trbrbl": "./assets/roads/tr-bl-trbrbl.png",
+    "tr-bl-trbrtl": "./assets/roads/tr-bl-trbrtl.png",
+    "tr-bl-bltl": "./assets/roads/tr-bl-bltl.png",
+    "tr-bl-brtl": "./assets/roads/tr-bl-brtl.png",
+    "tr-bl-trbl": "./assets/roads/tr-bl-trbl.png",
+    "tr-bl-bl": "./assets/roads/tr-bl-bl.png",
     "trl--": "./assets/roads/trl--.png",
     "trl--tr": "./assets/roads/trl--tr.png",
     "trl--trtl": "./assets/roads/trl--trtl.png",
     "trl-b-brbl": "./assets/roads/trl-b-brbl.png",
     "trl-b-trbrbl": "./assets/roads/trl-b-trbrbl.png",
     "trl-b-trbrbltl": "./assets/roads/trl-b-trbrbltl.png",
+    "trl-b-trbrtl": "./assets/roads/trl-b-trbrtl.png",
+    "trl-b-trbr": "./assets/roads/trl-b-trbr.png",
+    "trl-b-trbl": "./assets/roads/trl-b-trbl.png",
+    "trl-b-bl": "./assets/roads/trl-b-bl.png",
     "trbl--trbrbltl": "./assets/roads/trbl--trbrbltl.png",
     "trbl--brbltl": "./assets/roads/trbl--brbltl.png",
     "trbl--bltl": "./assets/roads/trbl--bltl.png",
@@ -165,18 +181,21 @@ class RoadsRenderer:
                 if not r.isARoad():
                     continue
 
-                if 0 <= x - 1 < self.gridColumns and r.goesToLeft == False:
-                    if grid[y][x - 1].goesToTop or grid[y][x - 1].goesToBottom:
-                        r.adjacentToLeft = True
-                if 0 <= x + 1 < self.gridColumns and r.goesToRight == False:
-                    if grid[y][x + 1].goesToTop or grid[y][x + 1].goesToBottom:
-                        r.adjacentToRight = True
-                if 0 <= y - 1 < self.gridRows and r.goesToTop == False:
-                    if grid[y - 1][x].goesToLeft or grid[y - 1][x].goesToRight:
-                        r.adjacentToTop = True
-                if 0 <= y + 1 < self.gridRows and r.goesToBottom == False:
-                    if grid[y + 1][x].goesToLeft or grid[y + 1][x].goesToRight:
-                        r.adjacentToBottom = True
+                if r.goesToTop or r.goesToBottom:
+                    if 0 <= x - 1 < self.gridColumns and r.goesToLeft == False:
+                        if grid[y][x - 1].goesToTop or grid[y][x - 1].goesToBottom:
+                            r.adjacentToLeft = True
+                    if 0 <= x + 1 < self.gridColumns and r.goesToRight == False:
+                        if grid[y][x + 1].goesToTop or grid[y][x + 1].goesToBottom:
+                            r.adjacentToRight = True
+
+                if r.goesToLeft or r.goesToRight:
+                    if 0 <= y - 1 < self.gridRows and r.goesToTop == False:
+                        if grid[y - 1][x].goesToLeft or grid[y - 1][x].goesToRight:
+                            r.adjacentToTop = True
+                    if 0 <= y + 1 < self.gridRows and r.goesToBottom == False:
+                        if grid[y + 1][x].goesToLeft or grid[y + 1][x].goesToRight:
+                            r.adjacentToBottom = True
 
                 if 0 <= x - 1 < self.gridColumns and 0 <= y - 1 < self.gridRows:
                     r1 = grid[y - 1][x - 1]
