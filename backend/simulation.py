@@ -26,6 +26,7 @@ class Simulation:
 
     def update(self, dt):
         if self.cars.__len__() == 0:
+            # Adds one car at a time
             source, destination = random.sample(self.spawners,2)
             path = self.graph.traverse(source,destination)
             source = int(source)
@@ -42,5 +43,4 @@ class Simulation:
         roadNodes = [ RoadNodeUI (0, 0),RoadNodeUI(3, 3),RoadNodeUI(0, 3),RoadNodeUI(20, 3),RoadNodeUI(3, 14),]
         roadConnections = [[int(t[0]) for t in self.graph.adj_list[key]] for key in sorted(self.graph.adj_list.keys())]
         cars = self.translator.translate(self.cars)
-        print(self.cars.__len__())
         return UIState(roadNodes, roadConnections, cars)
