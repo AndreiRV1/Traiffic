@@ -3,27 +3,28 @@ import numpy as np
 import random
 
 class Car:
+    '''
+    Car controller that implements movement
+    '''
     id_crt = 0
     def __init__(self, position,facing):
         self.id = self.id_crt
         self.id_crt +=1
         self.speed = 0
-        self.friction = 0.00005
+        self.friction = 0
 
-        self.accelerate_step = 0.0005
-        self.max_speed = 0.1
+        self.accelerate_step = 0.05
+        self.max_speed = 0.5
         self.steer_step = 0.1
 
         self.position = np.array(position)
         self.facing = np.array(facing)
 
-    def move(self,accelerate: int, steer:bool, dt):
-        if accelerate not in [-1,0,1]:
-            accelerate = 0
-        if steer not in [-1,0,1]:
-            steer = 0
+    def move(self,accelerate, steer, dt):
+        accelerate = np.clip(accelerate,-1,1)
+        steer = np.clip(steer,-1,1)
         acceleration = accelerate * self.accelerate_step
-        self.speed += acceleration
+        self.speed += acceleration * dt
         if self.speed > self.max_speed:
             self.speed = self.max_speed
 

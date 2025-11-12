@@ -4,6 +4,9 @@ import numpy as np
 import string
 
 class Loader:
+    '''
+    Loads from file with defined structure into data structures
+    '''
     def __init__(self, path : string):
         with open(path, "r") as file:
 
