@@ -1,5 +1,0 @@
-Backend:
-    - accelerate and velociry are not userd
-    - no sort of detection algorithm
-    - AI
-    - Simulation
