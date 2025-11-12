@@ -1,28 +1,41 @@
 import pygame
 
+from ui.data.road_tile_ui import RoadTileUI
+from ui.systems.roads_helper import RoadsHelper
+
 # each road representation
 # the keys are alphabetical to remove differences between dlr and rld for example
 # r - right, l - left, u - up, d - down
-roadsImages = {
-    # 1 way
-    "r": "./assets/roads/road_s_r.png",
-    "l": "./assets/roads/road_s_l.png",
-    "u": "./assets/roads/road_s_u.png",
-    "d": "./assets/roads/road_s_d.png",
-    # 2 way
-    "lr": "./assets/roads/road_s_rl.png",
-    "ru": "./assets/roads/road_s_ru.png",
-    "dr": "./assets/roads/road_s_rd.png",
-    "du": "./assets/roads/road_s_ud.png",
-    "lu": "./assets/roads/road_s_lu.png",
-    "dl": "./assets/roads/road_s_ld.png",
-    # 3 way
-    "dlr": "./assets/roads/road_s_rld.png",
-    "dlu": "./assets/roads/road_s_lud.png",
-    "lru": "./assets/roads/road_s_rlu.png",
-    "dru": "./assets/roads/road_s_rud.png",
-    # 4 way
-    "dlru": "./assets/roads/road_s_rlud.png",
+coreRoadsImages = {
+    "--": "./assets/roads/--.png",
+    "t--": "./assets/roads/t--.png",
+    "t-r-tr": "./assets/roads/t-r-tr.png",
+    "t-r-": "./assets/roads/t-r-.png",
+    "t-rl-trtl": "./assets/roads/t-rl-trtl.png",
+    "t-rl-tr": "./assets/roads/t-rl-tr.png",
+    "t-rl-": "./assets/roads/t-rl-.png",
+    "tb--": "./assets/roads/tb--.png",
+    "tb-r-trbr": "./assets/roads/tb-r-trbr.png",
+    "tb-r-br": "./assets/roads/tb-r-br.png",
+    "tb-r-": "./assets/roads/tb-r-.png",
+    "tr--": "./assets/roads/tr--.png",
+    "tr--tr": "./assets/roads/tr--tr.png",
+    "tr-l-": "./assets/roads/tr-l-.png",
+    "tr-l-tr": "./assets/roads/tr-l-tr.png",
+    "tr-bl-": "./assets/roads/tr-bl-.png",
+    "tr-bl-tr": "./assets/roads/tr-bl-tr.png",
+    "trl--": "./assets/roads/trl--.png",
+    "trl--tr": "./assets/roads/trl--tr.png",
+    "trl--trtl": "./assets/roads/trl--trtl.png",
+    "trl-b-brbl": "./assets/roads/trl-b-brbl.png",
+    "trl-b-trbrbl": "./assets/roads/trl-b-trbrbl.png",
+    "trl-b-trbrbltl": "./assets/roads/trl-b-trbrbltl.png",
+    "trbl--trbrbltl": "./assets/roads/trbl--trbrbltl.png",
+    "trbl--brbltl": "./assets/roads/trbl--brbltl.png",
+    "trbl--bltl": "./assets/roads/trbl--bltl.png",
+    "trbl--brtl": "./assets/roads/trbl--brtl.png",
+    "trbl--tr": "./assets/roads/trbl--tr.png",
+    "trbl--": "./assets/roads/trbl--.png",
 }
 
 
@@ -35,12 +48,13 @@ class RoadsRenderer:
         self.gridRows = gridRows
         self.gridColumns = gridColumns
         self.carsSurface = None
+        self.roadsHelper = RoadsHelper(coreRoadsImages)
         self.loadRoadImages()
 
     # loading the roads assets right at the start of the game
     def loadRoadImages(self):
-        for key in roadsImages:
-            roadsImages[key] = pygame.image.load(roadsImages[key])
+        for key in coreRoadsImages:
+            coreRoadsImages[key] = pygame.image.load(coreRoadsImages[key])
 
     # creates only once, when dirty, the surface for the roads
     def createRoadsSurface(self, roadNodes, roadConnections):
@@ -65,10 +79,18 @@ class RoadsRenderer:
                 screenX = (worldX - self.camera.x) * self.camera.zoom
                 screenY = (worldY - self.camera.y) * self.camera.zoom
 
-                # getting the right image or None
-                img = roadsImages.get(grid[y][x], None)
+                transformation = self.roadsHelper.getImageTransformation(
+                    grid[y][x].getEncoding()
+                )
+                img = coreRoadsImages.get(transformation.coreImageEncoding, None)
                 if img is not None:
-                    # added 1 to fenceCellWidth and fenceCellHeight to solve visual gaps between cells
+                    if transformation.mirrorHorizontal:
+                        img = pygame.transform.flip(img, True, False)
+                    if transformation.mirrorVertical:
+                        img = pygame.transform.flip(img, False, True)
+                    if transformation.rotation != 0:
+                        img = pygame.transform.rotate(img, -transformation.rotation)
+
                     scaled_img = pygame.transform.scale(
                         img,
                         (
@@ -99,7 +121,11 @@ class RoadsRenderer:
     # converting the roadNodes and roadConnections into a grid table with road keys
     def parseRoads(self, roadNodes, roadConnections):
         # initializing the grid
-        grid = [["" for _ in range(self.gridColumns)] for _ in range(self.gridRows)]
+        grid = [
+            [RoadTileUI() for _ in range(self.gridColumns)]
+            for _ in range(self.gridRows)
+        ]
+        print(roadConnections)
         for i in range(0, len(roadConnections)):
             nodeX = roadNodes[i].x
             nodeY = roadNodes[i].y
@@ -109,21 +135,82 @@ class RoadsRenderer:
                 neighX = roadNodes[neighbour].x
                 neighY = roadNodes[neighbour].y
                 if neighX > nodeX:
-                    for x in range(nodeX, neighX):
-                        grid[nodeY][x] += "r"
+                    for x in range(nodeX + 1, neighX):
+                        grid[nodeY][x].goesToRight = True
+                        grid[nodeY][x].goesToLeft = True
+                    grid[nodeY][nodeX].goesToRight = True
+                    grid[neighY][neighX].goesToLeft = True
                 elif neighX < nodeX:
-                    for x in range(neighX + 1, nodeX + 1):
-                        grid[nodeY][x] += "l"
+                    for x in range(neighX + 1, nodeX):
+                        grid[nodeY][x].goesToRight = True
+                        grid[nodeY][x].goesToLeft = True
+                    grid[nodeY][nodeX].goesToLeft = True
+                    grid[neighY][neighX].goesToRight = True
                 if neighY < nodeY:
-                    for y in range(neighY + 1, nodeY + 1):
-                        grid[y][nodeX] += "u"
+                    for y in range(neighY + 1, nodeY):
+                        grid[y][nodeX].goesToTop = True
+                        grid[y][nodeX].goesToBottom = True
+                    grid[nodeY][nodeX].goesToTop = True
+                    grid[neighY][neighX].goesToBottom = True
                 elif neighY > nodeY:
-                    for y in range(nodeY, neighY):
-                        grid[y][nodeX] += "d"
+                    for y in range(nodeY + 1, neighY):
+                        grid[y][nodeX].goesToTop = True
+                        grid[y][nodeX].goesToBottom = True
+                    grid[nodeY][nodeX].goesToBottom = True
+                    grid[neighY][neighX].goesToTop = True
 
-        # then, sort them to differentiate between rld and dlr, for example
-        for i in range(len(grid)):
-            for j in range(len(grid[i])):
-                if grid[i][j]:
-                    grid[i][j] = "".join(sorted(grid[i][j]))
+        for x in range(0, self.gridColumns):
+            for y in range(0, self.gridRows):
+                r = grid[y][x]
+                if not r.isARoad():
+                    continue
+
+                if 0 <= x - 1 < self.gridColumns and r.goesToLeft == False:
+                    if grid[y][x - 1].goesToTop or grid[y][x - 1].goesToBottom:
+                        r.adjacentToLeft = True
+                if 0 <= x + 1 < self.gridColumns and r.goesToRight == False:
+                    if grid[y][x + 1].goesToTop or grid[y][x + 1].goesToBottom:
+                        r.adjacentToRight = True
+                if 0 <= y - 1 < self.gridRows and r.goesToTop == False:
+                    if grid[y - 1][x].goesToLeft or grid[y - 1][x].goesToRight:
+                        r.adjacentToTop = True
+                if 0 <= y + 1 < self.gridRows and r.goesToBottom == False:
+                    if grid[y + 1][x].goesToLeft or grid[y + 1][x].goesToRight:
+                        r.adjacentToBottom = True
+
+                if 0 <= x - 1 < self.gridColumns and 0 <= y - 1 < self.gridRows:
+                    r1 = grid[y - 1][x - 1]
+                    if (
+                        r1.isARoad()
+                        and (r.goesToLeft or r.adjacentToLeft)
+                        and (r.goesToTop or r.adjacentToTop)
+                    ):
+                        r.adjacentToTopLeft = True
+
+                if 0 <= x - 1 < self.gridColumns and 0 <= y + 1 < self.gridRows:
+                    r1 = grid[y + 1][x - 1]
+                    if (
+                        r1.isARoad()
+                        and (r.goesToLeft or r.adjacentToLeft)
+                        and (r.goesToBottom or r.adjacentToBottom)
+                    ):
+                        r.adjacentToBottomLeft = True
+                if 0 <= x + 1 < self.gridColumns and 0 <= y - 1 < self.gridRows:
+                    r1 = grid[y - 1][x + 1]
+                    if (
+                        r1.isARoad()
+                        and (r.goesToRight or r.adjacentToRight)
+                        and (r.goesToTop or r.adjacentToTop)
+                    ):
+                        r.adjacentToTopRight = True
+                if 0 <= x + 1 < self.gridColumns and 0 <= y + 1 < self.gridRows:
+                    r1 = grid[y + 1][x + 1]
+                    if (
+                        r1.isARoad()
+                        and (r.goesToRight or r.adjacentToRight)
+                        and (r.goesToBottom or r.adjacentToBottom)
+                    ):
+                        r.adjacentToBottomRight = True
+
+        print(grid)
         return grid

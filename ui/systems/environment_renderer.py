@@ -121,15 +121,16 @@ class EnvironmentRenderer:
                 initX = math.floor(x / 2)
                 initY = math.floor(y / 2)
                 yGood = 0 <= initY + 1 < len(roadsGrid)
-                if yGood and 1 <= initX < len(roadsGrid[initY + 1]) - 1 and y % 2 == 1:
-                    # the text of the big cell underneath this big one
-                    sDown = roadsGrid[initY + 1][initX]
-                    if "l" in sDown and "r" in sDown:
-                        img = environmentFenceImages[0]  # fence part
-                    if "l" in sDown and "r" not in sDown and x % 2 == 1:
-                        img = environmentFenceImages[1]  # fence end
-                    elif "l" in sDown and "r" not in sDown and x % 2 == 0:
-                        img = environmentFenceImages[0]  # fence part
+                # if yGood and 1 <= initX < len(roadsGrid[initY + 1]) - 1 and y % 2 == 1:
+                #     # the text of the big cell underneath this big one
+                #     sDown = roadsGrid[initY + 1][initX]
+                #     if sDown.goesToLeft and sDown.goesToRight:
+                #         img = environmentFenceImages[0]  # fence part
+
+                #     if sDown.goesToLeft and not sDown.goesToRight and x % 2 == 1:
+                #         img = environmentFenceImages[1]  # fence end
+                #     elif sDown.goesToLeft and not sDown.goesToRight and x % 2 == 0:
+                #         img = environmentFenceImages[0]  # fence part
 
                 if img is not None:
                     # added 1 to fenceCellWidth and fenceCellHeight to solve visual gaps between cells
@@ -148,17 +149,10 @@ class EnvironmentRenderer:
         # getting avaliable positions, that are not adjacent to a road
         for y in range(0, self.gridRows):
             for x in range(0, self.gridColumns):
-                if roadsGrid[y][x] != "":
-                    continue
-                if x > 0 and roadsGrid[y][x - 1] != "":
-                    continue
-                if x + 1 < len(roadsGrid[0]) and roadsGrid[y][x + 1] != "":
-                    continue
-                if y > 0 and roadsGrid[y - 1][x] != "":
-                    continue
-                if y + 1 < len(roadsGrid) and roadsGrid[y + 1][x] != "":
-                    continue
-                availablePos.append([x, y])
+                if not (
+                    roadsGrid[y][x].isARoad() or roadsGrid[y][x].isAdjacentToAnything()
+                ):
+                    availablePos.append([x, y])
 
         # getting uniformily distributed positions across the map, using a stepper
         step = len(availablePos) // 32
