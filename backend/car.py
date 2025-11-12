@@ -4,8 +4,8 @@ import random
 class Car:
     id_crt = 0
     def __init__(self, graph : Graph, spawners : list):
-        self.id = id
-        self.id_crt += 1
+        self.id = self.id_crt
+        self.id_crt +=1
         self.progress = 0
         self.speed = 5
         self.accelerate = 0
@@ -31,7 +31,3 @@ class Car:
             except:
                 self.next_node = self.next_node
         return 1
-
-
-
-
