@@ -3,7 +3,7 @@ from backend.car import Car
 import numpy as np
 import random
 #from backend.utils import signed_angle,round,PID
-from backend.utils import PID, signed_angle, check_collision
+from backend.utils import PID, signed_angle, check_collision, check_street_collision
 
 
 class Car_follow(Car):
@@ -24,7 +24,7 @@ class Car_follow(Car):
 
 
 # Function will update current instance of car, returning 0     when car reached destination and 1 else
-    def update(self, dt : float, all_cars):
+    def update(self, dt : float, all_cars, road_bounds):
         dir_to_next = self.target - self.position
         dot = np.dot(self.facing, dir_to_next)
         if dot == 0:
@@ -54,5 +54,16 @@ class Car_follow(Car):
                     self.crashed = True
                     car2.crashed = True
                     return 0
+        if road_bounds and check_street_collision(self, road_bounds):
+            print("Road bounds reached!!!!!!!!!!!!!!!!!!!!!!")
+            print("Road bounds reached!!!!!!!!!!!!!!!!!!!!!!")
+            print("Road bounds reached!!!!!!!!!!!!!!!!!!!!!!")
+            print("Road bounds reached!!!!!!!!!!!!!!!!!!!!!!")
+            print("Road bounds reached!!!!!!!!!!!!!!!!!!!!!!")
+            print("Road bounds reached!!!!!!!!!!!!!!!!!!!!!!")
+            print("Road bounds reached!!!!!!!!!!!!!!!!!!!!!!")
+            print("Road bounds reached!!!!!!!!!!!!!!!!!!!!!!")
+            self.crashed = True
+            return 0
         self.move(forward,steer,dt)
         return 1

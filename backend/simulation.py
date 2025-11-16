@@ -8,8 +8,6 @@ from backend.loader import Loader
 import random
 from backend.utils import *
 
-from backend.utils import path_to_coords
-
 
 class UIState:
     def __init__ (self, roadNodes, roadConnections, cars): 
@@ -25,8 +23,9 @@ class Simulation:
         self.spawners = loader.spawners
         self.cars = []
         self.translator = Translator()
-        self.spawn_interval = 0.5
+        self.spawn_interval = 1.0
         self.time_since_last_spawn = 0.0
+        self.road_bounds = get_road_bounds(self.graph, self.coord_map, margin=1.0)
 #        self.translator_follow = Translator_follow(self.coord_map)
 
     def update(self, dt):
@@ -43,8 +42,8 @@ class Simulation:
         if self.time_since_last_spawn >= self.spawn_interval:
             self.time_since_last_spawn = 0.0
             self.spawn_car()
-        for car in self.cars[:]:
-            if not car.update(dt, all_cars = self.cars) or car.crashed == True:
+        for car in self.cars:
+            if not car.update(dt, all_cars = self.cars, road_bounds = self.road_bounds) or car.crashed == True:
                 self.cars.remove(car)
 
     #Car spawner method for easier testing
