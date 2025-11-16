@@ -26,6 +26,15 @@ def signed_angle(v1, v2, degrees=False):
         angle = np.degrees(angle)
     return angle
 
+def check_collision(car1, car2):
+    distance = np.linalg.norm(car1.position - car2.position)
+    if distance < car1.radius_detect + car2.radius_detect:
+        print("Collision detected")
+        car1.crash = True
+        car2.crash = True
+        return True
+    return False
+
 class PID:
     '''
     Simple PID controller for input management
