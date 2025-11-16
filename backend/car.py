@@ -1,6 +1,7 @@
 from backend.graph import Graph
 import numpy as np
 import random
+from backend.utils import get_road_bounds
 
 class Car:
     '''
