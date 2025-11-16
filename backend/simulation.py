@@ -8,6 +8,9 @@ from backend.loader import Loader
 import random
 from backend.utils import *
 
+from backend.utils import path_to_coords
+
+
 class UIState:
     def __init__ (self, roadNodes, roadConnections, cars): 
         self. roadNodes = roadNodes
@@ -22,23 +25,40 @@ class Simulation:
         self.spawners = loader.spawners
         self.cars = []
         self.translator = Translator()
+        self.spawn_interval = 0.5
+        self.time_since_last_spawn = 0.0
 #        self.translator_follow = Translator_follow(self.coord_map)
 
     def update(self, dt):
-        if self.cars.__len__() == 0:
-            # Adds one car at a time
-            source, destination = random.sample(self.spawners,2)
-            path = self.graph.traverse(source,destination)
-            source = int(source)
-            destination = int(destination)
-            coords = path_to_coords(path,self.coord_map)
-            new_car = Car_follow(self.coord_map[source],self.graph,coords)
-            self.cars.append(new_car)
-        for car in self.cars:
-            if not car.update(dt):
+        #if self.cars.__len__() == 0:
+        #    # Adds one car at a time
+        #    source, destination = random.sample(self.spawners,2)
+        #    path = self.graph.traverse(source,destination)
+        #    source = int(source)
+        #    destination = int(destination)
+        #    coords = path_to_coords(path,self.coord_map)
+        #    new_car = Car_follow(self.coord_map[source],self.graph,coords)
+        #    self.cars.append(new_car)
+        self.time_since_last_spawn += dt
+        if self.time_since_last_spawn >= self.spawn_interval:
+            self.time_since_last_spawn = 0.0
+            self.spawn_car()
+        for car in self.cars[:]:
+            if not car.update(dt, all_cars = self.cars) or car.crashed == True:
                 self.cars.remove(car)
-        
-    
+
+    #Car spawner method for easier testing
+    def spawn_car(self):
+        source, destination = random.sample(self.spawners,2)
+        path = self.graph.traverse(source,destination)
+        source = int(source)
+        destination = int(destination)
+        coords = path_to_coords(path,self.coord_map)
+        if not coords:
+            return
+        new_car = Car_follow(self.coord_map[source],self.graph,coords)
+        self.cars.append(new_car)
+
     def export_ui_state(self):
         roadNodes = [ RoadNodeUI (0, 0),RoadNodeUI(3, 3),RoadNodeUI(0, 3),RoadNodeUI(20, 3),RoadNodeUI(3, 14),]
         roadConnections = [[int(t[0]) for t in self.graph.adj_list[key]] for key in sorted(self.graph.adj_list.keys())]

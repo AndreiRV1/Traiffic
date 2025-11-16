@@ -8,8 +8,9 @@ class Car:
     '''
     id_crt = 0
     def __init__(self, position,facing):
-        self.id = self.id_crt
-        self.id_crt +=1
+        #self.id = self.id_crt
+        self.id = Car.id_crt
+        Car.id_crt +=1
         self.speed = 0
         self.friction = 0
 
@@ -19,6 +20,8 @@ class Car:
 
         self.position = np.array(position)
         self.facing = np.array(facing)
+        self.radius_detect = 0.5
+        self.crashed = False
 
     def move(self,accelerate, steer, dt):
         accelerate = np.clip(accelerate,-1,1)
