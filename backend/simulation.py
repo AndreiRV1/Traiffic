@@ -1,7 +1,7 @@
 from ui.data.car_ui import CarUI 
 from ui.data.road_node_ui import *
 from backend.translator import Translator
-from backend.translator import Translator_follow
+#from backend.translator import Translator_follow
 from backend.car import Car
 from backend.car_follow import Car_follow
 from backend.loader import Loader
@@ -22,7 +22,7 @@ class Simulation:
         self.spawners = loader.spawners
         self.cars = []
         self.translator = Translator()
-        self.translator_follow = Translator_follow(self.coord_map)
+#        self.translator_follow = Translator_follow(self.coord_map)
 
     def update(self, dt):
         if self.cars.__len__() == 0:
