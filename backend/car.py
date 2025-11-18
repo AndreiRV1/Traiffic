@@ -1,6 +1,7 @@
 from backend.graph import Graph
 import numpy as np
 import random
+from backend.utils import get_road_bounds
 
 class Car:
     '''
@@ -8,8 +9,9 @@ class Car:
     '''
     id_crt = 0
     def __init__(self, position,facing):
-        self.id = self.id_crt
-        self.id_crt +=1
+        #self.id = self.id_crt
+        self.id = Car.id_crt
+        Car.id_crt +=1
         self.speed = 0
         self.friction = 0
 
@@ -19,6 +21,8 @@ class Car:
 
         self.position = np.array(position)
         self.facing = np.array(facing)
+        self.radius_detect = 0.5
+        self.crashed = False
 
     def move(self,accelerate, steer, dt):
         accelerate = np.clip(accelerate,-1,1)
@@ -45,6 +49,10 @@ class Car:
         [np.sin(angle_to_steer),  np.cos(angle_to_steer)]
         ])
         self.facing = rotation_matrix @ self.facing
+        norm = np.linalg.norm(self.facing)
+        if norm != 0:
+            self.facing = self.facing / norm
+
         self.position = self.position + (self.facing * self.speed)
 
 
