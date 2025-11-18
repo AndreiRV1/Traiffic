@@ -35,42 +35,45 @@ def check_collision(car1, car2):
     distance = np.linalg.norm(car1.position - car2.position)
     if distance < car1.radius_detect + car2.radius_detect:
         print("Collision detected!!!!!!!!!")
-        car1.crash = True
-        car2.crash = True
+        car1.crashed = True
+        car2.crashed = True
         return True
     return False
 
-def get_road_bounds(graph, coord_map, margin):
-    '''
-    Returns a list of road bounds from the graph and coordinates map.
-    Each road bound is a dict: {x_min, x_max, y_min, y_max}
-    '''
-    margin = 0.3
+
+def get_road_bounds(graph, coord_map, margin, car_radius):
+    """
+    Returns padded road bounds for each edge.
+    Adds car_radius to ensure collision triggers even for tiny overshoots.
+    """
     bounds = []
     for start_node, neighbors in graph.adj_list.items():
         x1, y1 = coord_map[int(start_node)]
         for end_node, _ in neighbors:
             x2, y2 = coord_map[int(end_node)]
-            x_min = min(x1, x2) - margin
-            x_max = max(x1, x2) + margin
-            y_min = min(y1, y2) - margin
-            y_max = max(y1, y2) + margin
-            bounds.append({"x_min": x_min, "x_max": x_max, "y_min": y_min, "y_max": y_max})
+
+            x_min = min(x1, x2) - margin - car_radius
+            x_max = max(x1, x2) + margin + car_radius
+            y_min = min(y1, y2) - margin - car_radius
+            y_max = max(y1, y2) + margin + car_radius
+
+            bounds.append({"x_min": x_min, "x_max": x_max,
+                           "y_min": y_min, "y_max": y_max})
     return bounds
 
 
 def check_street_collision(car, road_bounds):
-    '''
-    Checks if a car collides with a road bound
-    '''
+    """
+    Checks if a car is outside all padded road bounds.
+    Returns True if off-road.
+    """
     x, y = car.position
-    r = car.radius_detect
     for road in road_bounds:
-        print(f"Car {car.id} at ({x:.2f},{y:.2f}) checking road bound {road}")
-        if road["x_min"] - r <= x <= road["x_max"] + r and road["y_min"] - r <= y <= road["y_max"] + r:
-            return False
-    print(f"Car {car.id} went off the street!")
+        if road["x_min"] <= x <= road["x_max"] and road["y_min"] <= y <= road["y_max"]:
+            return False  # still on some road
+    print(f"Car {car.id} went off the street! at ({x:.2f},{y:.2f})")
     return True
+
 
 
 class PID:
