@@ -19,11 +19,12 @@ class Car_follow(Car):
         facing = self.path[1] - self.path[0]
         self.pid_speed = PID(Kp=1.5, Ki=-0.02, Kd=0.5)
         self.pid_steer = PID(Kp=10, Ki=-0.02, Kd=0.1)
+        self.crashed = False
         print(self.path)
         super().__init__(position,facing)
 
 
-# Function will update current instance of car, returning 0     when car reached destination and 1 else
+# Function will update current instance of car, returning 0 when car reached destination and 1 else
     def update(self, dt : float, all_cars, road_bounds):
         dir_to_next = self.target - self.position
         dot = np.dot(self.facing, dir_to_next)
@@ -54,14 +55,8 @@ class Car_follow(Car):
                     self.crashed = True
                     car2.crashed = True
                     return 0
+        # Road bounds check
         if road_bounds and check_street_collision(self, road_bounds):
-            print("Road bounds reached!!!!!!!!!!!!!!!!!!!!!!")
-            print("Road bounds reached!!!!!!!!!!!!!!!!!!!!!!")
-            print("Road bounds reached!!!!!!!!!!!!!!!!!!!!!!")
-            print("Road bounds reached!!!!!!!!!!!!!!!!!!!!!!")
-            print("Road bounds reached!!!!!!!!!!!!!!!!!!!!!!")
-            print("Road bounds reached!!!!!!!!!!!!!!!!!!!!!!")
-            print("Road bounds reached!!!!!!!!!!!!!!!!!!!!!!")
             print("Road bounds reached!!!!!!!!!!!!!!!!!!!!!!")
             self.crashed = True
             return 0
