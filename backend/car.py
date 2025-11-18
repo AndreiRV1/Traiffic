@@ -21,7 +21,7 @@ class Car:
 
         self.position = np.array(position)
         self.facing = np.array(facing)
-        self.radius_detect = 1.5
+        self.radius_detect = 0.5
         self.crashed = False
 
     def move(self,accelerate, steer, dt):
