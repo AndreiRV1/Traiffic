@@ -25,3 +25,4 @@ class Loader:
                 edge.append(float(distance))
                 self.graph.add_multiple_edges(edge)
             self.spawners = list(file.readline().split())
+            self.destinations = list(file.readline().split())
