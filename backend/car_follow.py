@@ -20,37 +20,15 @@ class Car_follow(Car):
         self.pid_speed = PID(Kp=1.5, Ki=-0.02, Kd=0.5)
         self.pid_steer = PID(Kp=10, Ki=-0.02, Kd=0.1)
         self.crashed = False
-        print(self.path)
         super().__init__(position,facing)
 
 
 # Function will update current instance of car, returning 0 when car reached destination and 1 else
     def update(self, dt : float, all_cars, road_bounds):
-        dir_to_next = self.target - self.position
-        dot = np.dot(self.facing, dir_to_next)
-        if dot == 0:
-            dot = 1
-        dist_to_next = np.linalg.norm(dir_to_next) * np.sign(dot)
-        print(dist_to_next)
-        print(f"Car {self.id} updating at {self.position}")
-
-        if -1 < dist_to_next < 1:
-            print(self.crt_node, self.target)
-            self.crt_node +=1
-            if self.crt_node >= self.path.__len__():
-                return 0
-            else:
-                self.target = self.path[self.crt_node]
-                return 1
-        angle = signed_angle(self.facing,dir_to_next,True)
-        forward = self.pid_speed.update(dist_to_next, dt)
-        steer = self.pid_steer.update(angle, dt)
+        lead_car = None
         # Collision check between cars:
         if all_cars:
             for car2 in all_cars:
-                if car2.id != self.id:
-                    dist = np.linalg.norm(self.position - car2.position)
-                    print(f"Car {self.id} -> {car2.id}: dist {dist}")
                 if car2.id != self.id and check_collision(car2,self):
                     self.crashed = True
                     car2.crashed = True
@@ -60,5 +38,171 @@ class Car_follow(Car):
             print("Road bounds reached!!!!!!!!!!!!!!!!!!!!!!")
             self.crashed = True
             return 0
+        
+        # Intelligent driver approach to speed control
+        dir_to_next = self.target - self.position
+        dist_to_next = np.linalg.norm(dir_to_next)
+        target_speed = 0.25
+
+        if self.crt_node + 1 < len(self.path):
+            v1 = self.path[self.crt_node] - self.position
+            v2 = self.path[self.crt_node + 1] - self.path[self.crt_node]
+            norm_v1 = np.linalg.norm(v1)
+            norm_v2 = np.linalg.norm(v2)
+
+            if norm_v1 > 0 and norm_v2 > 0:
+                u1 = v1 / norm_v1
+                u2 = v2 / norm_v2
+                dot_prod = np.clip(np.dot(u1, u2), -1.0, 1.0)
+                angle = np.arccos(dot_prod)
+                if angle > 0.5 and norm_v1 < 2.0:
+                    target_speed = 0.03 # Slow speed for corners
+                elif norm_v1 < 5.0:
+                    target_speed = 0.08 # Slows before intersection anyways
+            if self.shouldYield(all_cars):
+                target_speed = 0
+
+        forward = self.getAcceleration(target_speed,self.get_closest_lead_car(all_cars))
+
+        # Pure pursuit for steering control
+        target_angle = np.arctan2(dir_to_next[1],dir_to_next[0])
+        current_angle = np.arctan2(self.facing[1],self.facing[0])
+        delta_angle = target_angle - current_angle
+        delta_angle = (delta_angle + np.pi) % (2 * np.pi) - np.pi 
+
+        steer = delta_angle * 2.0
+
+        #Get next lookahead
+        if -0.5 < dist_to_next < 0.5:
+            return self.getNextPoint(0.5)
+
+        
         self.move(forward,steer,dt)
         return 1
+    
+    # Gets next target point in Pure Pursuit style
+    def getNextPoint(self, lookahead):
+        if(self.crt_node >= self.path.__len__()-1):
+            return 0
+        if np.linalg.norm(self.target - self.path[self.crt_node + 1]) < 0.1:
+            self.crt_node +=1
+            if self.crt_node >= self.path.__len__()-1:
+                return 0
+    
+        direction = np.array(self.path[self.crt_node + 1]) - np.array(self.path[self.crt_node])
+        direction = direction / np.linalg.norm(direction)
+        direction *= lookahead
+        self.target += direction
+        if(np.linalg.norm(self.target - self.path[self.crt_node + 1]) < lookahead):
+            self.target = self.path[self.crt_node + 1]
+        return 1
+    
+    # Uses Intellident Driver to give acceleration command
+    def getAcceleration(self,target_speed,lead_car):
+        T = 1.5      # Safe time headway (seconds) - "2 second rule"
+        s0 = 3.0     # Minimum stopping distance (meters)
+        a = 0.05      # Max acceleration (m/s^2) - roughly matches your self.accelerate_step?
+        b = 4.0      # Comfortable deceleration (m/s^2)
+        delta = 4    # Acceleration exponent (usually 4)
+
+        v = self.speed
+        v0 = target_speed
+
+        if lead_car is None:
+            s = 1000.0
+            dv = 0.0
+        else:
+            s = np.linalg.norm(lead_car.position - self.position)
+            dv = self.speed - lead_car.speed
+
+        if s <= 0.1: s = 0.1
+        s_star = s0 + (v * T) + (v * dv) / (2 * np.sqrt(a * b))
+        if target_speed != 0:
+            accel_phys = a * (1 - (v / v0)**delta - (s_star / s)**2)
+        else:
+            if self.speed < 0.000001:
+                return 0
+            else:
+                return -(2.0/self.accelerate_step)
+        normalized_accel = accel_phys / self.accelerate_step
+
+
+        return normalized_accel
+    
+    # Gets car ahead
+    def get_closest_lead_car(self, all_cars, scan_distance=20.0, fov_deg=45):
+        closest_car = None
+        min_dist = float('inf')
+        fov_rad = np.deg2rad(fov_deg)
+        for other_car in all_cars:
+            if other_car.id == self.id:
+                continue
+            vec_to_other = other_car.position - self.position
+            dist = np.linalg.norm(vec_to_other)
+            if dist > scan_distance:
+                continue
+            my_heading_angle = np.arctan2(self.facing[1], self.facing[0])
+            angle_to_other = np.arctan2(vec_to_other[1], vec_to_other[0])
+            angle_diff = angle_to_other - my_heading_angle
+            angle_diff = (angle_diff + np.pi) % (2 * np.pi) - np.pi
+            if -fov_rad < angle_diff < fov_rad:
+                if dist < min_dist:
+                    min_dist = dist
+                    closest_car = other_car
+
+        return closest_car
+    
+
+    # Determines if car should yield
+    def shouldYield(self, all_cars):
+        if self.crt_node >= len(self.path):
+            return False
+
+        next_node_pos = self.path[self.crt_node]
+        my_dist = np.linalg.norm(next_node_pos - self.position)
+
+        if my_dist > 2:
+            return False
+
+        for other in all_cars:
+            if other.id == self.id:
+                continue
+            if other.crt_node>= len(other.path):
+                continue
+
+            other_next_node_pos = other.path[other.crt_node]
+            if np.linalg.norm(next_node_pos - other_next_node_pos) < 0.1:
+                my_prev = self.path[self.crt_node - 1]
+                other_prev = other.path[other.crt_node - 1]
+                if np.linalg.norm(my_prev - other_prev) < 0.1:
+                    continue
+
+                other_dist = np.linalg.norm(other_next_node_pos - other.position)
+
+                if other_dist < 1:
+                    return True
+                if my_dist < 2 and other_dist < 2:
+                    if abs(self.speed) < 0.1 and abs(other.speed) < 0.1:
+                        if other.id < self.id:
+                            return True
+                        else:
+                            continue
+
+                if other_dist < my_dist - 1.5:
+                    return True
+
+                if abs(my_dist - other_dist) < 1.5:
+                    my_angle = np.arctan2(self.facing[1], self.facing[0])
+                    other_angle = np.arctan2(other.facing[1], other.facing[0])
+                    diff = my_angle - other_angle
+                    diff = (diff + np.pi) % (2 * np.pi) - np.pi
+                    diff_deg = np.degrees(diff)
+                    
+                    if 80 < diff_deg < 100:
+                        return True
+                    
+                    if other.id < self.id:
+                         return True
+
+
+        return False

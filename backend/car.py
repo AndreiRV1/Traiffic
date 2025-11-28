@@ -25,21 +25,21 @@ class Car:
         self.crashed = False
 
     def move(self,accelerate, steer, dt):
-        accelerate = np.clip(accelerate,-1,1)
+        accelerate = np.clip(accelerate,-5,1)
         steer = np.clip(steer,-1,1)
         acceleration = accelerate * self.accelerate_step
         self.speed += acceleration * dt
         if self.speed > self.max_speed:
             self.speed = self.max_speed
 
-        if self.speed < -self.max_speed:
-            self.speed = -self.max_speed
-
-        if self.speed > 0:
-            self.speed -= self.friction
-
         if self.speed < 0:
-            self.speed += self.friction
+            self.speed = 0
+
+        # if self.speed > 0:
+            # self.speed -= self.friction
+# 
+        # if self.speed < 0:
+            # self.speed += self.friction
 
         angle_to_steer = 0
         if self.speed > 0:
