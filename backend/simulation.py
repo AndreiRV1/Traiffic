@@ -21,7 +21,7 @@ class UIState:
 
 class Simulation:
     def __init__(self):
-        loader = Loader("./data/predefined_level3.traiffic")
+        loader = Loader("./data/predefined_level4.traiffic")
         self.graph = loader.graph
         self.coord_map = loader.coord_map
         self.spawners = loader.spawners
@@ -72,8 +72,9 @@ class Simulation:
         if source is None:
             return
 
-        [destination] = random.sample(self.destinations, 1)
-        path = self.graph.traverse(source, destination)
+
+        [destination] = random.sample(self.destinations,1)
+        path = self.graph.traverse(source,destination)
         source = int(source)
         destination = int(destination)
         coords = path_to_coords(path, self.coord_map)
