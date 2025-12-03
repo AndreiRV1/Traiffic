@@ -1,7 +1,7 @@
 import pygame
 
-from ui.data.road_tile_ui import RoadTileUI
-from ui.systems.roads_helper import RoadsHelper
+from rendering.data.road_tile_ui import RoadTileUI
+from rendering.systems.roads_helper import RoadsHelper
 
 # each road representation
 # the keys are alphabetical to remove differences between dlr and rld for example
@@ -141,7 +141,6 @@ class RoadsRenderer:
             [RoadTileUI() for _ in range(self.gridColumns)]
             for _ in range(self.gridRows)
         ]
-        print(roadConnections)
         for i in range(0, len(roadConnections)):
             nodeX = roadNodes[i].x
             nodeY = roadNodes[i].y
@@ -231,5 +230,4 @@ class RoadsRenderer:
                     ):
                         r.adjacentToBottomRight = True
 
-        print(grid)
         return grid

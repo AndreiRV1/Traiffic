@@ -1,19 +1,23 @@
-from ui.data.car_ui import CarUI 
-from ui.data.road_node_ui import *
+from rendering.data.car_ui import CarUI
+from rendering.data.road_node_ui import *
 from backend.translator import Translator
-#from backend.translator import Translator_follow
+
+# from backend.translator import Translator_follow
 from backend.car import Car
 from backend.car_follow import Car_follow
 from backend.loader import Loader
 import random
 from backend.utils import *
+from rendering.data.traffic_light_ui import TrafficLightUI
 
 
 class UIState:
-    def __init__ (self, roadNodes, roadConnections, cars): 
-        self. roadNodes = roadNodes
-        self. roadConnections = roadConnections
+    def __init__(self, roadNodes, roadConnections, cars, trafficLights):
+        self.roadNodes = roadNodes
+        self.roadConnections = roadConnections
         self.cars = cars
+        self.trafficLights = trafficLights
+
 
 class Simulation:
     def __init__(self):
@@ -25,7 +29,9 @@ class Simulation:
         self.translator = Translator()
         self.spawn_interval = 1.0
         self.time_since_last_spawn = 2.0
-        self.road_bounds = get_road_bounds(self.graph, self.coord_map, margin = 0.2, car_radius = 0.5)
+        self.road_bounds = get_road_bounds(
+            self.graph, self.coord_map, margin=0.2, car_radius=0.5
+        )
         self.destinations = loader.destinations
 
     def update(self, dt):
@@ -39,11 +45,14 @@ class Simulation:
             self.spawn_car(self.cars)
             self.spawn_car(self.cars)
         for car in self.cars[:]:
-            if not car.update(dt, all_cars = self.cars, road_bounds = self.road_bounds) or car.crashed == True:
+            if (
+                not car.update(dt, all_cars=self.cars, road_bounds=self.road_bounds)
+                or car.crashed == True
+            ):
                 self.cars.remove(car)
 
-    #Car spawner method for easier testing
-    def spawn_car(self,all_cars):
+    # Car spawner method for easier testing
+    def spawn_car(self, all_cars):
         sources = list(self.spawners)
         random.shuffle(sources)
         source = None
@@ -55,27 +64,33 @@ class Simulation:
                 if np.linalg.norm(car.position - source_pos) < 0.9:
                     is_blocked = True
                     break
-                
+
             if not is_blocked:
                 source = src
-                break 
+                break
 
         if source is None:
             return
 
-
-        [destination] = random.sample(self.destinations,1)
-        path = self.graph.traverse(source,destination)
+        [destination] = random.sample(self.destinations, 1)
+        path = self.graph.traverse(source, destination)
         source = int(source)
         destination = int(destination)
-        coords = path_to_coords(path,self.coord_map)
+        coords = path_to_coords(path, self.coord_map)
         if not coords:
             return
-        new_car = Car_follow(self.coord_map[source],self.graph,coords)
+        new_car = Car_follow(self.coord_map[source], self.graph, coords)
         self.cars.append(new_car)
 
     def export_ui_state(self):
-        roadNodes = [RoadNodeUI(int(x),int(y)) for (x,y) in self.coord_map.values()]
-        roadConnections = [[int(t[0]) for t in self.graph.adj_list[key]] for key in sorted(self.graph.adj_list.keys())]
+        roadNodes = [RoadNodeUI(int(x), int(y)) for (x, y) in self.coord_map.values()]
+        roadConnections = [
+            [int(t[0]) for t in self.graph.adj_list[key]]
+            for key in sorted(self.graph.adj_list.keys())
+        ]
         cars = self.translator.translate(self.cars)
-        return UIState(roadNodes, roadConnections, cars)
+        trafficLights = [
+            TrafficLightUI(4, 10, 0, True),
+            TrafficLightUI(4, 10, 1, False),
+        ]
+        return UIState(roadNodes, roadConnections, cars, trafficLights)

@@ -24,7 +24,7 @@ class CarsRenderer:
         for index in range(0, len(carsImages)):
             carsImages[index] = pygame.image.load(carsImages[index])
 
-    # called every frame, uses the cars positions give by the simulation
+    # called every frame, uses the cars positions given by the simulation
     def draw(self, cars):
         cellWidth = self.mapWidth / self.gridColumns
         cellHeight = self.mapHeight / self.gridRows
@@ -41,7 +41,7 @@ class CarsRenderer:
             # choosing a random colored car
             img = carsImages[car.id % len(carsImages)]
 
-            # scaliong the image using the camera parameters
+            # scaling the image using the camera parameters
             scaled_img = pygame.transform.scale(
                 img, (cellWidth * self.camera.zoom, cellHeight * self.camera.zoom)
             )

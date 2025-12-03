@@ -1,8 +1,9 @@
 import pygame
 
-from ui.systems.cars_renderer import CarsRenderer
-from ui.systems.environment_renderer import EnvironmentRenderer
-from ui.systems.roads_renderer import RoadsRenderer
+from rendering.systems.cars_renderer import CarsRenderer
+from rendering.systems.environment_renderer import EnvironmentRenderer
+from rendering.systems.roads_renderer import RoadsRenderer
+from rendering.systems.traffic_lights_renderer import TrafficLightsRenderer
 
 
 # Contains and controlls all the renderers
@@ -16,6 +17,9 @@ class Renderer:
             camera, screen, mapWidth, mapHeight, gridRows, gridColumns
         )
         self.roadsRenderer = RoadsRenderer(
+            camera, screen, mapWidth, mapHeight, gridRows, gridColumns
+        )
+        self.trafficLightsRenderer = TrafficLightsRenderer(
             camera, screen, mapWidth, mapHeight, gridRows, gridColumns
         )
         # dirty means that the roads' cached surface or the environment's cached surface must change
@@ -45,3 +49,4 @@ class Renderer:
         self.environmentRenderer.draw()
         self.roadsRenderer.draw()
         self.carsRenderer.draw(state.cars)
+        self.trafficLightsRenderer.draw(state.trafficLights)
