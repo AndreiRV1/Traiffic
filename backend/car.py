@@ -17,7 +17,7 @@ class Car:
 
         self.accelerate_step = 0.05
         self.max_speed = 0.5
-        self.steer_step = 0.1
+        self.steer_step = 0.2
 
         self.position = np.array(position)
         self.facing = np.array(facing)

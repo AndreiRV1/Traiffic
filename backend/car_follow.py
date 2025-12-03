@@ -20,11 +20,14 @@ class Car_follow(Car):
         self.pid_speed = PID(Kp=1.5, Ki=-0.02, Kd=0.5)
         self.pid_steer = PID(Kp=10, Ki=-0.02, Kd=0.1)
         self.crashed = False
+        self.time_limit = 4
+        self.elapsed_time = 0
         super().__init__(position,facing)
 
 
 # Function will update current instance of car, returning 0 when car reached destination and 1 else
     def update(self, dt : float, all_cars, road_bounds):
+        print(self.target)
         lead_car = None
         # Collision check between cars:
         if all_cars:
@@ -38,6 +41,10 @@ class Car_follow(Car):
             print("Road bounds reached!!!!!!!!!!!!!!!!!!!!!!")
             self.crashed = True
             return 0
+        if self.speed > 0:
+            self.elapsed_time = 0
+        else:
+            self.elapsed_time+=dt
         
         # Intelligent driver approach to speed control
         dir_to_next = self.target - self.position
@@ -56,7 +63,7 @@ class Car_follow(Car):
                 dot_prod = np.clip(np.dot(u1, u2), -1.0, 1.0)
                 angle = np.arccos(dot_prod)
                 if angle > 0.5 and norm_v1 < 2.0:
-                    target_speed = 0.03 # Slow speed for corners
+                    target_speed = 0.02 # Slow speed for corners
                 elif norm_v1 < 5.0:
                     target_speed = 0.08 # Slows before intersection anyways
             if self.shouldYield(all_cars):
@@ -73,13 +80,14 @@ class Car_follow(Car):
         steer = delta_angle * 2.0
 
         #Get next lookahead
-        if -0.5 < dist_to_next < 0.5:
+        if -0.2 < dist_to_next < 0.2:
             return self.getNextPoint(0.5)
 
         
         self.move(forward,steer,dt)
         return 1
-    
+
+
     # Gets next target point in Pure Pursuit style
     def getNextPoint(self, lookahead):
         if(self.crt_node >= self.path.__len__()-1):
@@ -130,7 +138,7 @@ class Car_follow(Car):
         return normalized_accel
     
     # Gets car ahead
-    def get_closest_lead_car(self, all_cars, scan_distance=20.0, fov_deg=45):
+    def get_closest_lead_car(self, all_cars, scan_distance=20.0, fov_deg=5):
         closest_car = None
         min_dist = float('inf')
         fov_rad = np.deg2rad(fov_deg)
@@ -163,6 +171,11 @@ class Car_follow(Car):
 
         if my_dist > 2:
             return False
+        
+        isAggressive = False
+        
+        if self.elapsed_time > self.time_limit:
+            isAggressive = True
 
         for other in all_cars:
             if other.id == self.id:
@@ -171,7 +184,7 @@ class Car_follow(Car):
                 continue
 
             other_next_node_pos = other.path[other.crt_node]
-            if np.linalg.norm(next_node_pos - other_next_node_pos) < 0.1:
+            if np.linalg.norm(next_node_pos - other_next_node_pos) < 1.5:
                 my_prev = self.path[self.crt_node - 1]
                 other_prev = other.path[other.crt_node - 1]
                 if np.linalg.norm(my_prev - other_prev) < 0.1:
@@ -179,8 +192,10 @@ class Car_follow(Car):
 
                 other_dist = np.linalg.norm(other_next_node_pos - other.position)
 
-                if other_dist < 1:
+                if other_dist < 0.7:
                     return True
+                if isAggressive:
+                    return False
                 if my_dist < 2 and other_dist < 2:
                     if abs(self.speed) < 0.1 and abs(other.speed) < 0.1:
                         if other.id < self.id:
