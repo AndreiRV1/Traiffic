@@ -26,3 +26,18 @@ class Loader:
                 self.graph.add_multiple_edges(edge)
             self.spawners = list(file.readline().split())
             self.destinations = list(file.readline().split())
+            try:
+                num_trafficlights = int(file.readline())
+            except:
+                num_trafficlights = 0
+
+            self.trafficlights = list()
+            crt_light = -1
+            for i in range(0,num_trafficlights):
+                light_list = [int(x) for x in list(file.readline().split())]
+                if light_list[0] != crt_light:
+                    light_list.append(False)
+                    crt_light = light_list[0]
+                else:
+                    light_list.append(True)
+                self.trafficlights.append(light_list)
