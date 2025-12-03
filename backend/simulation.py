@@ -2,7 +2,6 @@ from rendering.data.car_ui import CarUI
 from rendering.data.road_node_ui import *
 from backend.translator import Translator
 
-# from backend.translator import Translator_follow
 from backend.car import Car
 from backend.car_follow import Car_follow
 from backend.loader import Loader
@@ -21,7 +20,7 @@ class UIState:
 
 class Simulation:
     def __init__(self):
-        loader = Loader("./data/predefined_level4.traiffic")
+        loader = Loader("./data/predefined_level2.traiffic")
         self.graph = loader.graph
         self.coord_map = loader.coord_map
         self.spawners = loader.spawners
@@ -33,6 +32,17 @@ class Simulation:
             self.graph, self.coord_map, margin=0.2, car_radius=0.5
         )
         self.destinations = loader.destinations
+        self.trafficlights = loader.trafficlights
+        self.trafficlighttimer = 0
+        self.trafficlightMap = {}
+        i = 0
+        for trafficlight in self.trafficlights:
+            key = trafficlight[0]
+            if key in self.trafficlightMap:
+                self.trafficlightMap[key].append(i)
+            else:
+                self.trafficlightMap[key] = [i]
+            i += 1
 
     def update(self, dt):
         # if self.cars.__len__() == 0:
@@ -43,13 +53,29 @@ class Simulation:
         if self.time_since_last_spawn >= self.spawn_interval:
             self.time_since_last_spawn = 0.0
             self.spawn_car(self.cars)
-            self.spawn_car(self.cars)
         for car in self.cars[:]:
             if (
-                not car.update(dt, all_cars=self.cars, road_bounds=self.road_bounds)
+                not car.update(dt, all_cars=self.cars, road_bounds=self.road_bounds, trafficLights = self.trafficlights, coordmap = self.coord_map)
                 or car.crashed == True
             ):
                 self.cars.remove(car)
+        self.update_trafficlights(dt)
+
+    def update_trafficlights(self,dt):
+        self.trafficlighttimer += dt
+        if self.trafficlighttimer > 2.0:
+            for key,value in self.trafficlightMap.items():
+                for i,idx in enumerate(value):
+                    light = self.trafficlights[idx]
+                    if light[2] == False:
+                        light[2] = True
+                        next_light = (i+1)%len(value)
+                        self.trafficlights[value[next_light]][2] = False
+                        self.trafficlighttimer = 0
+                        return
+            self.trafficlighttimer = 0
+        
+
 
     # Car spawner method for easier testing
     def spawn_car(self, all_cars):
@@ -72,7 +98,6 @@ class Simulation:
         if source is None:
             return
 
-
         [destination] = random.sample(self.destinations,1)
         path = self.graph.traverse(source,destination)
         source = int(source)
@@ -90,8 +115,9 @@ class Simulation:
             for key in sorted(self.graph.adj_list.keys())
         ]
         cars = self.translator.translate(self.cars)
-        trafficLights = [
-            TrafficLightUI(4, 10, 0, True),
-            TrafficLightUI(4, 10, 1, False),
-        ]
+        trafficLights = []
+        for light in self.trafficlights:
+            idx = int(light[0])
+            direction = light[1]
+            trafficLights.append(TrafficLightUI(self.coord_map[idx][0],self.coord_map[idx][1],int(direction),light[2]))
         return UIState(roadNodes, roadConnections, cars, trafficLights)
