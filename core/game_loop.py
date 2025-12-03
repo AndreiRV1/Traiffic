@@ -1,8 +1,8 @@
 import pygame
 from backend.simulation import Simulation
 from core.settings import *
-from ui.systems.camera import Camera
-from ui.systems.renderer import Renderer
+from rendering.systems.camera import Camera
+from rendering.systems.renderer import Renderer
 
 
 class GameLoop:

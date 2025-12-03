@@ -1,4 +1,4 @@
-from ui.data.road_tile_transform_ui import RoadTileTransformUI
+from rendering.data.road_tile_transform_ui import RoadTileTransformUI
 
 
 class RoadsHelper:
@@ -32,13 +32,11 @@ class RoadsHelper:
                             self.cache[currentEncoding] = RoadTileTransformUI(
                                 baseEncoding, rotation_degrees, horizontal, vertical
                             )
-        print(len(self.cache))
 
     def getImageTransformation(self, encoding):
         if self.cache == None:
             raise ValueError(f"huh: {encoding}")
         if encoding not in self.cache:
-            print(encoding)
             return self.cache["trbl--trbrbltl"]
 
         return self.cache[encoding]
